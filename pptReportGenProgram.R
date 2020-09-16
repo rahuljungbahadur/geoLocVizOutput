@@ -6,7 +6,6 @@ library(leafpop)
 library(mapview)
 library(png)
 library(grid)
-library(rBahadurFunc)
 library(OpenStreetMap)
 library(ggrepel)
 library(ggpubr)
@@ -14,7 +13,7 @@ library(officer)
 library(gridExtra)
 
 
-## function to read in thhe data from a .xlsx file
+## function to read in the data from a .xlsx file
 func_readFile <- function(fileName){
   data_frame <- readxl::read_xlsx(fileName)
   return(data_frame)
@@ -72,8 +71,8 @@ func_plotGen <- function(data_frame, streetMap){
   streetMapPlot <- autoplot.OpenStreetMap(streetMap) + 
     geom_point(data = data_frame, aes(x = Lon, y = Lat, fill = value),
                size = 3, show.legend = F, alpha = 0.3, shape = 21) +
-    theme_void() + 
-    theme(plot.margin = margin(c(1,1,1,1, unit = "pt")))
+    theme_void() #+ 
+    #theme(plot.margin = margin(c(1,1,1,1, unit = "pt")))
   
   ##Pie chart
   
@@ -102,9 +101,9 @@ func_plotGen <- function(data_frame, streetMap){
                     col = "black", size = 3.5,
                     show.legend = F, nudge_x = 2.5, segment.size = 0.2,
                     direction = "y", hjust = 0.1) +
-    theme_void() +
-    theme(plot.margin = margin(3,3,3,3, unit = "pt"),
-          text = element_text(size = 100))
+    theme_void() #+
+    # theme(plot.margin = margin(3,3,3,3, unit = "pt"),
+    #       text = element_text(size = 100))
   ## Datatable Grob
   
   tableGrobVal <- tableGrob(dataSumm %>%
@@ -131,7 +130,7 @@ func_plotGen <- function(data_frame, streetMap){
   arranged_gridPLot <- grid.arrange(tableGrobVal, streetMapPlot, donutPlot1,
                                     ncol = 2, layout_matrix = layoutMatrix,
                                     widths = c(1,3), heights = c(1,1),
-                                    padding = unit(0.5, "line")) %>%
+                                    padding = unit(2.5, "line")) %>%
     ggpubr::as_ggplot()
   
   return(arranged_gridPLot)
@@ -141,7 +140,7 @@ func_plotGen <- function(data_frame, streetMap){
 ## Function for aggregating 4 plots in 1
 
 func_plotAgg <- function(plotList){
-  ggarrange(plotlist = plotList$plots, ncol = 2, nrow = 2) %>%
+  ggarrange(plotlist = plotList$plots, ncol = 2, nrow = 2, align = "hvyyy") %>%
     return()
 }
 
