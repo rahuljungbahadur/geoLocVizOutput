@@ -20,8 +20,9 @@ func_readFile <- function(fileName){
 }
 
 ## Function to bin the continuous variables into buckets
-func_dataTransform <- function(data_frame){
+func_dataTransform <- function(data_frame, nested = T){
   
+  ## Change 'Value_1' etc to the relevant variables
   data_frameTransformed <- data_frame %>%
     mutate(Value_1 = if_else(`Value 1` < -85, "-85 and lower",
                              if_else(`Value 1` <= -75, "-75 to -85",
@@ -41,10 +42,12 @@ func_dataTransform <- function(data_frame){
     select(-matches("Value [0-9]+$")) %>%
     pivot_longer(cols = matches("Value_[0-9]+$"), names_to = "specs")
   
-  data_frameNested <- data_frameTransformed %>% group_by(specs, Mobile) %>%
-    nest()
-  
-  return(data_frameNested)
+  if (nested == T) {
+    data_frameNested <- data_frameTransformed %>% group_by(specs, Mobile) %>%
+      nest()
+    return(data_frameNested)
+  }
+  return(data_frameTransformed)
 }
 
 ## Function for creating the base street map
@@ -64,7 +67,7 @@ func_baseStreetMap <- function(data_frame){
 
 ## Function for creating the plots : inputs -> data_frame, baseStreet map
 
-func_plotGen <- function(data_frame, streetMap){
+func_plotGen <- function(data_frame, streetMap, ttheme = "minimal"){
   
   ##Street Map
   
@@ -106,21 +109,31 @@ func_plotGen <- function(data_frame, streetMap){
     #       text = element_text(size = 100))
   ## Datatable Grob
   
-  tableGrobVal <- tableGrob(dataSumm %>%
-                              select(value, counts), rows = NULL,
-                            theme = ttheme_minimal(base_size = 10,
-                                                   padding = unit(c(2,2), "mm")))
-  tableGrobVal <- gtable::gtable_add_grob(tableGrobVal,
-                                          grobs = grid::rectGrob(gp =
-                                                                   grid::gpar(fill = NA,
-                                                                              lwd = 2)),
-                                          t = 2, b = nrow(tableGrobVal), l = 1,
-                                          r = ncol(tableGrobVal))
-  tableGrobVal <- gtable::gtable_add_grob(tableGrobVal,
-                                          grobs = grid::rectGrob(gp = 
-                                                                   grid::gpar(fill = NA,
-                                                                              lwd = 2)),
-                                          t = 1, l = 1, r = ncol(tableGrobVal))
+  
+  
+  if (ttheme == "default") {
+    tableGrobVal <- tableGrob(dataSumm %>%
+                                select(value, counts), rows = NULL,
+                              theme = ttheme_default(base_size = 10,
+                                                     padding = unit(c(1,1), "mm")))
+  } else {
+    tableGrobVal <- tableGrob(dataSumm %>%
+                                select(value, counts), rows = NULL,
+                              theme = ttheme_minimal(base_size = 10,
+                                                     padding = unit(c(1,1), "mm")))
+    tableGrobVal <- gtable::gtable_add_grob(tableGrobVal,
+                                            grobs = grid::rectGrob(gp =
+                                                                     grid::gpar(fill = NA,
+                                                                                lwd = 2)),
+                                            t = 2, b = nrow(tableGrobVal), l = 1,
+                                            r = ncol(tableGrobVal))
+    tableGrobVal <- gtable::gtable_add_grob(tableGrobVal,
+                                            grobs = grid::rectGrob(gp = 
+                                                                     grid::gpar(fill = NA,
+                                                                                lwd = 2)),
+                                            t = 1, l = 1, r = ncol(tableGrobVal))
+  }
+  
   tableGrobVal %<>%  as_ggplot()
   
   # dataSummGrob <- dataSumm %>% select(value, counts) %>% gt() %>%
@@ -159,7 +172,7 @@ func_main <- function(outputPPTName){
   data_frame <- func_readFile(filePath)
   
   ## Transform and nest the data : nests by the variable specs
-  nestedData <- func_dataTransform(data_frame)
+  nestedData <- func_dataTransform(data_frame, nested = T)
   
   ## Create Base street map : common to all plots
   baseMap <- func_baseStreetMap(data_frame)
