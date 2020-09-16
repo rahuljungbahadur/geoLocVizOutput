@@ -52,8 +52,8 @@ func_dataTransform <- function(data_frame){
 func_baseStreetMap <- function(data_frame){
   lat <- data_frame$Lat
   lon <- data_frame$Lon
-  upperLeft = c(max(lat) + 0.0005, min(lon) - 0.0005)
-  lowerRight = c(min(lat) - 0.0005, max(lon) + 0.0005)
+  upperLeft = c(max(lat) + 0.0001, min(lon) - 0.0001)
+  lowerRight = c(min(lat) - 0.0001, max(lon) + 0.0001)
   
   streetMap <- openmap(upperLeft = upperLeft, lowerRight = lowerRight,
                        mergeTiles = T, minNumTiles = 8)
@@ -140,7 +140,7 @@ func_plotGen <- function(data_frame, streetMap){
 ## Function for aggregating 4 plots in 1
 
 func_plotAgg <- function(plotList){
-  ggarrange(plotlist = plotList$plots, ncol = 2, nrow = 2, align = "hvyyy") %>%
+  ggarrange(plotlist = plotList$plots, ncol = 2, nrow = 2, align = "hv") %>%
     return()
 }
 
