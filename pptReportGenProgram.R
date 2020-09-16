@@ -177,26 +177,34 @@ func_main <- function(outputPPTName){
   filePath <- file.choose()
   data_frame <- func_readFile(filePath)
   
+  pb <- txtProgressBar(min = 1, max = 9, initial = 1)
+  
   ## Transform and nest the data : nests by the variable specs
   nestedData <- func_dataTransform(data_frame, nested = T)
+  setTxtProgressBar(pb, 2)
   
   ## Create Base street map : common to all plots
   baseMap <- func_baseStreetMap(data_frame)
+  setTxtProgressBar(pb, 3)
   
   ## Create plots for nested data
   nestedData %<>% mutate(plots = map(.x = data, .f = func_plotGen, baseMap,
                                      plotTitle = Mobile))
-  
+  setTxtProgressBar(pb, 4)
   ## Aggregate nested data another level
   nestedData2 <- nestedData %>% group_by(specs) %>% nest()
+  setTxtProgressBar(pb, 5)
   
   ## Plot aggregation for 4 plots
   nestedData2 %<>% mutate(plots4 = map(.x = data, .f = func_plotAgg))
+  setTxtProgressBar(pb, 6)
   
   ## Create PPT and print plots
   ppt <- read_pptx()
+  setTxtProgressBar(pb, 7)
   pptOutput <- lapply(nestedData2$plots4, func_createSlides, ppt)
-  
+  setTxtProgressBar(pb, 8)
   ## Save PPT
   print(pptOutput, target = outputPPTName)
+  setTxtProgressBar(pb, 9)
 }
