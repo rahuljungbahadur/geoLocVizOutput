@@ -55,8 +55,8 @@ func_dataTransform <- function(data_frame, nested = T){
 func_baseStreetMap <- function(data_frame){
   lat <- data_frame$Lat
   lon <- data_frame$Lon
-  upperLeft = c(max(lat) + 0.0001, min(lon) - 0.0001)
-  lowerRight = c(min(lat) - 0.0001, max(lon) + 0.0001)
+  upperLeft = c(max(lat) + 0.001, min(lon) - 0.0001)
+  lowerRight = c(min(lat) - 0.001, max(lon) + 0.0001)
   
   streetMap <- openmap(upperLeft = upperLeft, lowerRight = lowerRight,
                        mergeTiles = T, minNumTiles = 8)
@@ -67,7 +67,7 @@ func_baseStreetMap <- function(data_frame){
 
 ## Function for creating the plots : inputs -> data_frame, baseStreet map
 
-func_plotGen <- function(data_frame, streetMap, ttheme = "minimal"){
+func_plotGen <- function(data_frame, streetMap, ttheme = "minimal", plotTitle){
   
   ##Street Map
   
@@ -104,9 +104,9 @@ func_plotGen <- function(data_frame, streetMap, ttheme = "minimal"){
                     col = "black", size = 3.5,
                     show.legend = F, nudge_x = 2.5, segment.size = 0.2,
                     direction = "y", hjust = 0.1) +
-    theme_void() #+
-    # theme(plot.margin = margin(3,3,3,3, unit = "pt"),
-    #       text = element_text(size = 100))
+    theme_void() +
+    theme(plot.margin = margin(0,0,0,0, unit = "pt"),
+          text = element_text(size = 100))
   ## Datatable Grob
   
   
@@ -114,8 +114,8 @@ func_plotGen <- function(data_frame, streetMap, ttheme = "minimal"){
   if (ttheme == "default") {
     tableGrobVal <- tableGrob(dataSumm %>%
                                 select(value, counts), rows = NULL,
-                              theme = ttheme_default(base_size = 10,
-                                                     padding = unit(c(1,1), "mm")))
+                              theme = ttheme_default(base_size = 11,
+                                                     padding = unit(c(2,2), "mm")))
   } else {
     tableGrobVal <- tableGrob(dataSumm %>%
                                 select(value, counts), rows = NULL,
@@ -139,12 +139,18 @@ func_plotGen <- function(data_frame, streetMap, ttheme = "minimal"){
   # dataSummGrob <- dataSumm %>% select(value, counts) %>% gt() %>%
   #   as_ggplot()
   
-  layoutMatrix <- rbind(c(1,2),c(3,2))
-  arranged_gridPLot <- grid.arrange(tableGrobVal, streetMapPlot, donutPlot1,
-                                    ncol = 2, layout_matrix = layoutMatrix,
-                                    widths = c(1,3), heights = c(1,1),
-                                    padding = unit(2.5, "line")) %>%
-    ggpubr::as_ggplot()
+  # layoutMatrix <- rbind(c(1,2),c(3,2))
+  # arranged_gridPLot <- grid.arrange(tableGrobVal, streetMapPlot, donutPlot1,
+  #                                   ncol = 2, top = plotTitle,
+  #                                   layout_matrix = layoutMatrix,
+  #                                   widths = c(1,3), heights = c(1,1),
+  #                                   padding = unit(0, "line")) %>%
+  #   ggpubr::as_ggplot()
+  
+  arranged_gridPLot <- ggarrange(ggarrange(tableGrobVal, donutPlot1, ncol = 1),
+                                 ggarrange(streetMapPlot, ncol = 1, nrow = 1),
+                                 ncol = 2, align = "hv", labels = plotTitle,
+                                 widths = c(1,2), common.legend = F)
   
   return(arranged_gridPLot)
 }
@@ -178,7 +184,8 @@ func_main <- function(outputPPTName){
   baseMap <- func_baseStreetMap(data_frame)
   
   ## Create plots for nested data
-  nestedData %<>% mutate(plots = map(.x = data, .f = func_plotGen, baseMap))
+  nestedData %<>% mutate(plots = map(.x = data, .f = func_plotGen, baseMap,
+                                     plotTitle = Mobile))
   
   ## Aggregate nested data another level
   nestedData2 <- nestedData %>% group_by(specs) %>% nest()
